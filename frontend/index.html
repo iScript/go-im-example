@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        function userId(id){
+            if(typeof  id =="undefined"){
+                var r = sessionStorage.getItem("userid");
+                if(!r){
+                    return 0;
+                }else{
+                    return parseInt(r)
+                }
+            }else{
+                sessionStorage.setItem("userid",id);
+            }
+        }
+        function userInfo(o){
+            if(typeof  o =="undefined"){
+                var r = sessionStorage.getItem("userinfo");
+                if(!!r){
+                    return JSON.parse(r);
+                }else{
+                    return null
+                }
+            }else{
+                sessionStorage.setItem("userinfo",JSON.stringify(o));
+            }
+        }
+
+        if(!sessionStorage.getItem("userinfo")){
+            location.href="login.html"
+        }
+
+        var url = location.href;
+        var isOpen = url.indexOf("/login")>-1 || url.indexOf("/register")>-1
+        if (!userId() && !isOpen){
+          // location.href = "login.shtml";
+        }
+    
+    </script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>IM</title>
+    <link rel="stylesheet" href="/asset/plugins/mui/css/mui.css" />
+    <link rel="stylesheet" href="/asset/css/chat.css" />
+    
+    <script src="/asset/plugins/mui/js/mui.js" ></script>
+    <script src="/asset/js/vue.min.js" ></script>
+    <script src="/asset/js/util.js" ></script>
+    <script>
+       function post(uri,data,fn){
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST","//"+location.host+"/"+uri, true);
+            // 添加http头，发送信息至服务器时内容编码类型
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 304)) {
+                    fn.call(this, JSON.parse(xhr.responseText));
+                }
+            };
+            var _data=[];
+            if(!! userId()){
+                // data["userid"] = userId();
+            }
+            for(var i in data){
+                _data.push( i +"=" + encodeURI(data[i]));
+            }
+            xhr.send(_data.join("&"));
+        }
+        function uploadfile(uri,dom,fn){
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST","//"+location.host+"/"+uri, true);
+            // 添加http头，发送信息至服务器时内容编码类型
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 304)) {
+                    fn.call(this, JSON.parse(xhr.responseText));
+                }
+            };
+            var _data=[];
+            var formdata = new FormData();
+            if(!! userId()){
+                formdata.append("userid",userId());
+            }
+            formdata.append("file",dom.files[0])
+            xhr.send(formdata);
+        }
+        function uploadblob(uri,blob,fn){
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST","//"+location.host+"/"+uri, true);
+            // 添加http头，发送信息至服务器时内容编码类型
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 304)) {
+                    fn.call(this, JSON.parse(xhr.responseText));
+                }
+            };
+            var _data=[];
+            var formdata = new FormData();
+            formdata.append("filetype",".mp3");
+            if(!! userId()){
+                formdata.append("userid",userId());
+            }
+            formdata.append("file",blob)
+            xhr.send(formdata);
+       }
+    </script>
+    
+    <style>
+        .flex-container{
+            display:flex;
+            flex-direction:row;
+            width:100%;
+            padding-top: 10px;
+            position: fixed;
+            bottom: 0px;
+            background-color: #FFFFFF;
+        }
+        .item-1{
+            height:50px;
+            height:50px;
+            padding: 5px 5px 5px 5px;
+        }
+        .item-2{
+                    margin-right:auto;
+            height:50px;
+            width: 100%;
+        }
+        .txt{
+            margin-right:auto;
+        }
+        .item-3{
+            height:50px;
+            height:50px;
+            padding: 5px 5px 5px 5px;
+        }
+        .item-4{
+            height:50px;
+            height:50px;
+            padding: 5px 5px 5px 5px;
+        }
+    
+         li.chat{
+             justify-content: flex-start;
+             align-items: flex-start;
+             display: flex;
+    
+         }
+         .chat.other{
+             flex-direction: row;
+         }
+        .chat.mine{
+            flex-direction: row-reverse;
+        }
+        img.avatar{
+            width: 64px;
+            height:64px;
+        }
+        .other .avatar{
+            margin-left:10px;
+        }
+        .mine .avatar{
+            margin-right:10px;
+        }
+        .other span{
+            border: 10px solid;
+            border-color: transparent #FFFFFF transparent transparent ;
+            margin-top: 10px;
+        }
+        .mine span{
+            border: 10px solid;
+            border-color: transparent  transparent transparent #32CD32;
+            margin-top: 10px;
+        }
+        .other>.content{
+            background-color: #FFFFFF;
+    
+        }
+        .mine>.content{
+            background-color: #32CD32;
+    
+        }
+        div.content{
+            min-width: 60px;
+            clear: both;
+            display: inline-block;
+            padding: 16px 16px 16px 10px;
+            margin: 0 0 20px 0;
+            font: 16px/20px 'Noto Sans', sans-serif;
+            border-radius: 10px;
+    
+            min-height: 64px;
+        }
+        .content>img.pic{
+            width: 100%;
+            margin:3px 3px 3px 3px;
+        }
+        .content>img.audio{
+            width: 32px;
+            color: white;
+        }
+        #panels{
+            background-color: #FFFFFF;
+            display: flex;
+            position: fixed;
+            bottom: 50px;
+        }
+        .doutures{
+            flex-direction: row;
+            flex-wrap: wrap;
+            display: flex;
+        }
+        .doutures img{
+            margin: 10px 10px 10px 10px;
+        }
+        .doutupkg{
+            flex-direction: row;
+            flex-wrap: wrap;
+            display: flex;
+        }
+        .plugins{
+            flex-direction: row;
+            flex-wrap: wrap;
+            display: flex;
+        }
+        .plugin{
+            padding: 10px 10px 10px 20px;
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+        .plugin img{
+            width: 40px;
+        }
+        .plugin p{
+            text-align: center;
+            font-size: 16px;
+        }
+        .doutupkg img{
+            width: 32px;
+            height: 32px;
+            margin: 5px 5px 5px 5px;
+        }
+        .upload{
+            width: 64px;
+            height: 64px;
+            position: absolute;
+            top: 1px;
+            opacity:0;
+        }
+        .tagicon{
+            width: 32px;
+            height:32px;
+        }
+        
+        .small{
+            width: 32px;
+            height:32px;
+        }
+        .middle{
+            width: 64px;
+            height:64px;
+        }
+        .large{
+            width: 96px;
+            height:96px;
+        }
+        .res image{
+            width: 32px;
+            height:32px;
+        }
+    </style>
+</head>
+<body>
+<!--底部菜单-->
+<nav class="mui-bar mui-bar-tab" id="menubar">
+    <a class="mui-tab-item mui-active" href="#tabbar-concat">
+        <span class="mui-icon mui-icon-chat"></span>
+        <span class="mui-tab-label">好友</span>
+    </a>
+    <a class="mui-tab-item" href="#tabbar-group">
+        <span class="mui-icon mui-icon-chatboxes"><span class="mui-badge">9</span></span>
+        <span class="mui-tab-label">群聊</span>
+    </a>
+    <a class="mui-tab-item" href="#tabbar-profile">
+        <span class="mui-icon mui-icon-person"></span>
+        <span class="mui-tab-label">我的</span>
+    </a>
+
+</nav>
+<header class="mui-bar mui-bar-nav">
+</header>
+<div class="mui-content" id="pageapp">
+    <!--联系人-->
+    <div id="tabbar-concat" class="mui-control-content mui-active" v-show="win=='main'">
+        <header class="mui-bar mui-bar-nav">
+    
+            <h1 class="mui-title">联系人</h1>
+        </header>
+        <ul class="mui-table-view mui-table-view-chevron">
+            <li v-for="item in friends" class="mui-table-view-cell mui-media" @tap="singlemsg(item)">
+                <a class="mui-navigate-right">
+                    <img class="mui-media-object mui-pull-left" :src="item.avatar ||'/asset/images/avatar0.png'">
+                    <div class="mui-media-body">
+                        <span v-text="item.nickname"></span>
+                        <p class='mui-ellipsis' v-text="item.memo"></p>
+                    </div>
+                </a>
+            </li>
+    
+        </ul>
+    
+    </div>
+    <!--群聊-->
+    <div id="tabbar-group" class="mui-control-content" v-show="win=='main'">
+        <header class="mui-bar mui-bar-nav">
+            <h1 class="mui-title">群聊</h1>
+        </header>
+        <ul class="mui-table-view mui-table-view-chevron">
+            <li v-for="item in communitys" class="mui-table-view-cell mui-media" @tap="groupmsg(item)">
+                <a class="mui-navigate-right">
+                    <img class="mui-media-object mui-pull-left" :src="item.icon">
+                    <div class="mui-media-body">
+                        <span v-text="item.name"></span>
+                        <p class='mui-ellipsis' v-text="item.memo"></p>
+                    </div>
+                </a>
+            </li>
+    
+        </ul>
+    </div>
+    <!--个人中心-->
+    <div id="tabbar-profile" class="mui-control-content" v-show="win=='main'">
+        <header class="mui-bar mui-bar-nav">
+            <h1 class="mui-title">个人中心</h1>
+        </header>
+        <ul class="mui-table-view mui-table-view-chevron">
+            <li class="mui-table-view-cell mui-media">
+                <a href="#" class="mui-navigate-right" >
+                    <img class="mui-media-object mui-pull-left head-img" id="head-img" :src="profile.avatar||'/asset/images/betatech.jpg'">
+                    <div class="mui-media-body">
+                        <span v-text="profile.nickname">betatech</span>
+                        <p class='mui-ellipsis' v-text="profile.memo">immm</p>
+                    </div>
+                </a>
+            </li>
+        </ul>
+        <ul class="mui-table-view">
+            
+    
+            <li @click="addfriend" class="mui-table-view-cell">
+                <a class="mui-navigate-right">
+                    添加好友
+                </a>
+            </li>
+            <li @click="joincomunity" class="mui-table-view-cell">
+                <a class="mui-navigate-right">
+                    加入社群
+                </a>
+            </li>
+            <li  class="mui-table-view-cell">
+                <a class="mui-navigate-right" href="#">
+                    创建社群
+                </a>
+            </li>
+        </ul>
+        
+        <ul class="mui-table-view" style="margin-top: 25px;">
+            <li @click="quit" class="mui-table-view-cell">
+                <a style="text-align: center;color: #FF3B30;">
+                    退出登录
+                </a>
+            </li>
+        </ul>
+    </div>
+    <!--聊天主界面-->
+    <div v-show="win!='main'">
+        <header class="mui-bar mui-bar-nav">
+            <a class="mui-icon mui-icon-left-nav mui-pull-left" @tap="win='main'"></a>
+            <h1 class="mui-title" v-text="title"></h1>
+        </header>
+        <div id="convo" data-from="Sonu Joshi">
+        
+            <ul class="chat-thread">
+                 <!--群聊且item.dstid=当前msgcontext.dstid
+                <span v-text="JSON.stringify(msglist)"></span>
+                  -->
+                 <!--单聊且是他发的item.userid=msgcontext.dstid && 发给我的 item.dstid=myid 或者是我item.userid= myid发的,&&发给他的item.dstid= msgcontext.dstid 我发给他的  -->
+                <li class="chat " :class="item.ismine?'mine':'other'" v-for="item in msglist" v-if="item.msg.cmd==msgcontext.cmd && (( item.msg.cmd==10 &&  (item.ismine? item.msg.dstid==msgcontext.dstid : item.msg.dstid==msgcontext.userid )) || ( item.msg.cmd==11 &&  (item.msg.dstid==msgcontext.dstid))) ">
+                    
+                    <div >
+                    <img class="avatar" :src="item.user.avatar || '/asset/images/avatar0.png'" />
+                </div>
+        
+                <span ></span>
+                <div class="content">
+                    <div v-if="item.msg.media==1" v-text="item.msg.content"></div>
+                    <img class="pic" v-if="item.msg.media==4" :src="item.msg.url" />
+                    <div v-if="item.msg.media==3" @tap="playaudio(item.msg.url)">
+                        <img class="audio" src="/asset/images/audiom.png" />
+                        <span v-text="item.msg.amount"></span>
+                    </div>
+                </div>
+                </li>
+        
+        
+            </ul>
+        </div>
+        <div class="flex-container" >
+            <div class="item-1" @tap="txtstat='audio'" v-if="txtstat=='kbord'">
+                <img src="/asset/images/audio.png" />
+            </div>
+            <div class="item-1" @tap="txtstat='kbord'" v-if="txtstat=='audio'">
+                <img src="/asset/images/kbord.png" />
+            </div>
+            <div class="item-2" v-if="txtstat=='kbord'">
+                <input placeholder="这里写点啥" class="text" type="text" v-model="txtmsg"/>
+            </div>
+            <div class="item-2" v-if="txtstat=='audio'">
+                <input value="请按住说话" type="button" class="text" style="margin-top: 5px;width: 100%; text-align: center"  @touchstart="startrecorder" @touchend="stoprecorder">
+        
+                </input>
+            </div>
+            <div class="item-3" @tap="panelstat='doutu'">
+                <img src="/asset/images/smile.png" />
+            </div>
+            <div class="item-4" v-if="!txtmsg" @tap="panelstat='more'">
+                <img src="/asset/images/more.png" />
+            </div>
+            <div class="item-4" v-if="!!txtmsg" @tap="sendtxtmsg(txtmsg)">
+                <img src="/asset/images/send.png" />
+            </div>
+        </div>
+        <div id="panels" style="display: flex">
+        <div v-if="panelstat=='doutu'" >
+            <div class="doutures" >
+                <div @tap="sendpicmsg(item)" class="res" v-for="item in doutu.choosed.assets">
+                <img :class="doutu.choosed.size ||'small'"  :src="item" />
+                </div>
+            </div>
+            <div class="doutupkg">
+                <div class="pkg" @tap="doutu.choosed=item" v-for="item in doutu.packages">
+                    <img :class="item.size || 'small'"  :src="item.icon" />
+                </div>
+            </div>
+        </div>
+        <div v-if="panelstat=='more'" class="plugins">
+            <div class="plugin" @tap="dispatchplugin(item)" v-for="item in plugins">
+                <img  :src="item.icon" />
+                <div v-html="item.slot"></div>
+                <p v-text="item.name"></p>
+        
+            </div>
+        
+        </div>
+        </div>
+        </div>
+        <audio id="audio" style="display: none"></audio>
+        <audio id="audio4play" style="display: none"></audio>
+
+</div>
+<script>
+
+    function upload(dom){
+        uploadfile("attach/upload",dom,function(res){
+            console.log(res)
+            if(res.code==0){
+                app.sendpicmsg(res.data)
+            }
+
+        })
+    }
+    var app=new Vue(
+            {
+                el:"#pageapp",
+                data:{
+                    usermap:{},
+                    friends:[],
+                    communitys:[],
+                    profile:{
+                        avatar:"",
+                        nickname:"",
+                        memo:"",
+                    },
+                    webSocket:{},
+                    win:"main",
+                    txtmsg:"",
+                    panelstat:"kbord",
+                    txtstat:"kbord",
+                    title:"",
+                    doutu:{
+                        config:{
+                            "baseurl":"/asset/plugins/doutu/",
+                            "pkgids":["mkgif","emoj"]
+                        },
+                        packages:[],
+                        choosed:{"pkgid":"emoj","assets":[],"size":"small"}
+                    },
+                    msglist:[],
+
+                    msgcontext:{
+                        dstid:10,
+                        cmd:10,
+                        userid:userId()
+                    },
+                    plugins:[
+                        {
+                            icon:"/asset/images/upload.png",
+                            name:"照片",
+                            id:"upload",
+                            slot:"<input accept=\"image/gif,image/jpeg,,image/png\" type=\"file\" onchange=\"upload(this)\" class='upload' />"
+                        },
+
+                        {
+                            icon:"/asset/images/camera.png",
+                            name:"拍照",
+                            id:"camera",
+                            slot:"<input accept=\"image/*\" capture=\"camera\" type=\"file\" onchange=\"upload(this)\" class='upload' />"
+                        }
+
+                    ],
+                    timer:0,
+                    recorder:{},
+                    allChunks:[],
+                    iscomplete:false,
+                    duration:0,
+                },
+                created:function(){
+                    this.loadfriends();
+                    //this.loadcommunitys();
+                    //this.loaddoutures();
+                    var user = userInfo()
+                    if(!!user){
+                        this.profile.avatar = user.avatar;
+                        this.profile.nickname = user.nickname;
+
+                        this.profile.memo = user.memo;
+                        var url="ws://"+location.host+"/chat?id="+userId()+"&token=" +user.token;
+                        this.webSocket=new WebSocket(url);
+                        this.initwebsocket()
+                    }
+
+                },
+                mounted:function(){
+
+                },
+                methods:{
+                    playaudio:function(url){
+                        document.getElementById('audio4play').src = url;
+                        document.getElementById('audio4play').play();
+                    },
+                    dispatchplugin:function(item){
+                        switch (item.id) {
+                            case "upload":
+                            case "camera":
+
+                                break;
+                            default:
+                                mui.toast("系统暂不支持,请自行扩展")
+                        }
+                    },
+                    reset:function(){
+                        this.panelstat="kbord";
+                        this.txtstat="kbord";
+                        this.txtmsg = "";
+                    },
+                    createmsgcontext:function(){
+                        return JSON.parse(JSON.stringify(this.msgcontext))
+                    },
+                    loaddoutures:function(){
+                        var res=[];
+                        var config = this.doutu.config;
+                        for(var i in config.pkgids){
+                            res[config.pkgids[i]]=(config.baseurl+"/"+config.pkgids[i]+"/info.json")
+                        }
+                        var that = this;
+                        for(var id in res){
+                            console.log("res[i]",id,res[id])
+                            post(res[id],{},function(pkginfo){
+                                console.log("post res[i]",id,res[id],pkginfo)
+                                var baseurl= config.baseurl+"/"+pkginfo.id+"/"
+                                for(var j in pkginfo.assets){
+                                    pkginfo.assets[j] = baseurl+pkginfo.assets[j];
+                                }
+                                pkginfo.icon = baseurl + pkginfo.icon;
+                                that.doutu.packages.push(pkginfo)
+                                if(that.doutu.choosed.pkgid==pkginfo.id){
+                                    that.doutu.choosed.assets=pkginfo.assets;
+                                }
+
+                            })
+                        }
+                    },
+                    showweixin:function(){
+                        mui.alert("test")
+                    } ,
+                    showmsg:function(user,msg){
+                        var data={
+
+                        }
+                        console.log("showmsggg",msg,user)
+                        data.ismine = userId()==msg.userid;
+                        console.log(data.ismine,userId(),msg.userid)
+                        data.user = user;
+                        data.msg = msg;
+                        this.msglist = this.msglist.concat(data)
+                        this.reset();
+                        var that =this;
+                        that.timer = setTimeout(function(){
+                            window.scrollTo(0, document.getElementById("convo").offsetHeight);
+                            clearTimeout(that.timer)
+                        },100)
+
+                    },
+                    startrecord:function(){
+
+                    },
+                    sendtxtmsg:function(txt){
+                        //{id:1,userid:2,dstid:3,cmd:10,media:1,content:"hello"}
+                        var msg =this.createmsgcontext();
+                        msg.media=1;
+                        msg.content=txt;
+                        this.showmsg(userInfo(),msg);
+                        this.webSocket.send(JSON.stringify(msg))
+                    },
+                    sendpicmsg:function(picurl){
+                        console.log("send picmsg")
+                        //{id:1,userid:2,dstid:3,cmd:10,media:4,url:"http://www.baidu.com/a/log,jpg"}
+                        var msg =this.createmsgcontext();
+                        msg.media=4;
+                        msg.url=picurl;
+                        this.showmsg(userInfo(),msg)
+                        this.webSocket.send(JSON.stringify(msg))
+                    },
+                    singlemsg:function(user){
+                        console.log(user)
+                        this.win = "single";
+                        this.title = "和"+user.nickname+"聊天中";
+                        this.msgcontext.dstid = user.id;
+                        this.msgcontext.cmd = 10;
+                    },
+                    groupmsg:function(group){
+
+                        this.win = "group";
+                        this.title=group.name;
+                        this.msgcontext.dstid = group.id;
+                        this.msgcontext.cmd = 11;
+                    },
+                    loaduserinfo:function(userid,cb){
+                        console.log("loaduserinfo ",userid,this.usermap)
+                        var userinfo = this.usermap[userid];
+                        if(!userinfo){
+                            post("user/find",{id:userid},function(res){
+                                cb(res.data);
+                                this.usermap[userid] = res.data;
+                            }.bind(this))
+                        }else{
+                            cb(userinfo)
+                        }
+                    },
+                    onmessage:function(data){
+
+                        this.loaduserinfo(data.userid,function(user){
+                            this.showmsg(user,data)
+                        }.bind(this))
+
+                    },
+                    initwebsocket:function(){
+                        var url="ws://"+location.host+"/chat?id="+userId()+"&token=" +util.parseQuery("token");
+                        this.webSocket=new WebSocket(url);
+                        //消息处理
+                        this.webSocket.onmessage = function(evt){
+                            console.log("recv11<=="+evt.data)
+                            if(evt.data.indexOf("}")>-1){
+                                
+                                this.onmessage(JSON.parse(evt.data));
+                            }else{
+                                console.log("recv22<=="+evt.data)
+                            }
+                        }.bind(this)
+                        //关闭回调
+                        this.webSocket.onclose=function (evt) {
+                            console.log(evt.data)
+                        }
+                        //出错回调
+                        this.webSocket.onerror=function (evt) {
+                            console.log(evt.data)
+                        }
+                        /*{
+                            this.webSocket.send()
+                        }*/
+                    },
+                    sendmsg:function(){
+
+                    },
+                    loadfriends:function(){
+                        var that = this;
+                        post("contact/loadfriend",{userid:userId()},function(res){
+                            console.log("friends,",res)
+                            that.friends = res.data ||[];
+                            var usermap = this.usermap;
+                            for(var i in res.data){
+                                var k = ""+res.data[i].id
+                                
+                                usermap[k]=res.data[i];
+                            }
+
+                            this.usermap = usermap;
+                            console.log(this.usermap)
+                        }.bind(this))
+                    },
+                    loadcommunitys:function(){
+                        var that = this;
+                        post("contact/community",{userid:userId()},function(res){
+                            that.communitys = res.rows ||[];
+                        })
+                    },
+                    addfriend:function(){
+                        var that = this;
+                        mui.prompt('','请输入好友ID','加好友',['取消','确认'],function (e) {
+                            if (e.index == 1) {
+                                if (isNaN(e.value) || e.value <= 0) {
+                                    mui.toast('格式错误');
+                                }else{
+                                    //mui.toast(e.value);
+                                    that._addfriend(e.value)
+                                }
+                            }else{
+                                //mui.toast('您取消了入库');
+                            }
+                        },'div');
+                        document.querySelector('.mui-popup-input input').type = 'number';
+                    },
+                    _addfriend:function(dstobj){
+                        var user = userInfo();
+                        console.log("user add f",user)
+                        post("contact/addfriend",{toid:dstobj,fromid: user.id,pic:user.avatar,content:user.nickname,memo: "请求加你为好友"},function(res){
+                            if(res.code==200){
+                                mui.toast("添加成功");
+                                that.loadfriends();
+                            }else{
+                                mui.toast(res.message);
+                            }
+                        })
+                    },
+                    _joincomunity:function(dstobj){
+                        // var that = this;
+                        // post("user/joincommunity",{dstid:dstobj},function(res){
+                        //     if(res.code==0){
+                        //         mui.toast("添加成功");
+
+                        //         that.loadcommunitys();
+                        //     }else{
+                        //         mui.toast(res.message);
+                        //     }
+                        // })
+                    },
+                    joincomunity:function(){
+                        // var that = this;
+                        // mui.prompt('','请输入群号','加群',['取消','确认'],function (e) {
+                        //     if (e.index == 1) {
+                        //         if (isNaN(e.value) || e.value <= 0) {
+                        //             mui.toast('格式错误');
+                        //         }else{
+                        //             //mui.toast(e.value);
+                        //             that._joincomunity(e.value)
+                        //         }
+                        //     }else{
+                        //         //mui.toast('您取消了入库');
+                        //     }
+                        // },'div');
+                        // document.querySelector('.mui-popup-input input').type = 'number';
+                    },
+                    quit:function () {
+                        sessionStorage.removeItem("userid")
+                        sessionStorage.removeItem("userinfo")
+                        location.href="login.html"
+                    }
+
+
+                },
+                watch:{
+                    "win":function(n,o){
+                        console.log("watch",o,n)
+                        if(n!="main"){
+                            document.getElementById("menubar").style.display="none";
+                        }else{
+                            document.getElementById("menubar").style.display="block";
+                        }
+                    }
+                }
+            }
+    )
+</script>
+</body>
+</html>
+
